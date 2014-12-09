@@ -18,6 +18,7 @@ using System.IO;
 using System.Windows.Threading;
 
 using ChatUI.Backend;
+using System.ComponentModel;
 
 namespace ChatUI
 {
@@ -65,6 +66,11 @@ namespace ChatUI
         private void sendBtn_Click(object sender, RoutedEventArgs e)
         {
             sendMessage();
+        }
+
+        public void Exit(object sender, CancelEventArgs e)
+        {
+            cSession.closeChat(username);
         }
     }
 }

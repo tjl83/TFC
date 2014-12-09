@@ -4,3 +4,8 @@ C:\Users\legolaptop\git\Tinfoil-Chat\TinfoilChat\OTRLib\OTRLib\bin\Debug\OTRLib.
 C:\Users\legolaptop\git\Tinfoil-Chat\TinfoilChat\OTRLib\OTRLib\bin\Debug\BouncyCastle.Crypto.dll
 C:\Users\legolaptop\git\Tinfoil-Chat\TinfoilChat\OTRLib\OTRLib\obj\Debug\OTRLib.dll
 C:\Users\legolaptop\git\Tinfoil-Chat\TinfoilChat\OTRLib\OTRLib\obj\Debug\OTRLib.pdb
+C:\Users\legolaptop\git\TFC\OTRLib\OTRLib\bin\Debug\OTRLib.dll
+C:\Users\legolaptop\git\TFC\OTRLib\OTRLib\bin\Debug\OTRLib.pdb
+C:\Users\legolaptop\git\TFC\OTRLib\OTRLib\obj\Debug\OTRLib.csprojResolveAssemblyReference.cache
+C:\Users\legolaptop\git\TFC\OTRLib\OTRLib\obj\Debug\OTRLib.dll
+C:\Users\legolaptop\git\TFC\OTRLib\OTRLib\obj\Debug\OTRLib.pdb

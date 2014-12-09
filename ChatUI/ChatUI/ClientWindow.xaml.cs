@@ -78,6 +78,11 @@ namespace ChatUI
 
         private void Exit(object sender, CancelEventArgs e)
         {
+            foreach (ChatWindow chat in chats.Values)
+            {
+                chat.Hide();
+            }
+            this.Hide();
             currentSession.close();
         }
     }

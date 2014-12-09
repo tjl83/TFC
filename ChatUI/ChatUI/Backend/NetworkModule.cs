@@ -9,7 +9,7 @@ using System.Threading;
 
 namespace ChatUI.Backend
 {
-    public enum msgType { Verification, Internal, Chat }
+    public enum msgType { Initial, Internal, Chat }
 
     public class NetworkModule
     {
@@ -44,6 +44,10 @@ namespace ChatUI.Backend
             Thread portListenerThread = new Thread(() => listenForConnection(portListener));
             portListenerThread.Name = "Port Listener";
             portListenerThread.Start();
+        }
+
+        public bool hasClient(TcpClient client){
+            return connectedUsers.Contains(client);
         }
 
         /// <summary>
@@ -148,7 +152,7 @@ namespace ChatUI.Backend
                 switch (msgBytes[msgSize - 1])
                 {
                     case 1:
-                        type = msgType.Verification;
+                        type = msgType.Initial;
                         break;
                     case 2:
                         type = msgType.Internal;
@@ -194,7 +198,7 @@ namespace ChatUI.Backend
         {
             switch (type)
             {
-                case msgType.Verification:
+                case msgType.Initial:
                     msg = appendToEnd(msg, 1);
                     break;
                 case msgType.Internal:
@@ -215,9 +219,16 @@ namespace ChatUI.Backend
         {
             msg = appendToEnd(msg, 0);
 
-            NetworkStream networkStream = client.GetStream();
-            networkStream.Write(msg, 0, msg.Length);
-            networkStream.Flush();
+            try
+            {
+                NetworkStream networkStream = client.GetStream();
+                networkStream.Write(msg, 0, msg.Length);
+                networkStream.Flush();
+            }
+            catch (Exception e)
+            {
+                Console.Error.WriteLine("In messageThread: " + e.Message);
+            }
         }
 
         public void ignore(TcpClient client)

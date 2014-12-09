@@ -13,6 +13,11 @@ using ChatUI.Dialogue;
 
 namespace ChatUI.Backend
 {
+    public static class InternalMsgType{
+        public const string SignOff = "0";
+        public const string BeginConvo = "1";
+        public const string EndConvo = "2";
+    }
     public class Session
     {
         private static NetworkModule nModule;
@@ -20,7 +25,7 @@ namespace ChatUI.Backend
 
         private string AlicesID;
 
-        private OTRSessionManager AliceSessionManager;
+        OTRSessionManager AliceSessionManager;
 
         public Dictionary<string, TcpClient> usersbyUsername;
         public Dictionary<TcpClient, string> usersbyTcpClient;
@@ -64,15 +69,28 @@ namespace ChatUI.Backend
         private void sendUsername(TcpClient client)
         {
             byte[] usernameBytes = Encoding.ASCII.GetBytes(AlicesID);
-            nModule.message(client, msgType.Verification, usernameBytes);
+            nModule.message(client, msgType.Initial, usernameBytes);
         }
 
         public void beginConversation(String user)
         {
-            TcpClient client = null;
-            if (usersbyUsername.TryGetValue(user, out client))
+            sendMessage(user, msgType.Internal, InternalMsgType.BeginConvo);
+            beginOTRSession(user);
+            while (!AliceSessionManager.IsSessionValid(user)) {
+                Thread.Sleep(1);
+            }
+        }
+
+        public void beginOTRSession(String AlicesFriendID)
+        {
+            AliceSessionManager.OnOTREvent += new OTREventHandler(OnAliceOTRManagerEventHandler);
+
+            AliceSessionManager.CreateOTRSession(AlicesFriendID, true);
+
+            //Person with higher/lower IP is host.
+            if (AlicesFriendID.CompareTo(AlicesID) < 0)
             {
-                nModule.message(client, msgType.Internal, new byte[] { });
+                AliceSessionManager.RequestOTRSession(AlicesFriendID, OTRSessionManager.GetSupportedOTRVersionList()[0]);
             }
         }
 
@@ -84,16 +102,20 @@ namespace ChatUI.Backend
         /// <param name="msg"></param>
         public void signalNewMessage(TcpClient client, msgType type, byte[] msg)
         {
+            String message = Encoding.ASCII.GetString(msg);
+            String user;
+            usersbyTcpClient.TryGetValue(client, out user);
+
             switch (type)
             {
-                case msgType.Verification:
-                    receiveUsername(client, msg);
+                case msgType.Initial:
+                    receiveUsername(client, message);
                     break;
                 case msgType.Internal:
-                    checkInternal(client);
+                    checkInternal(user, message);
                     break;
                 case msgType.Chat:
-                    processChat(client, msg);
+                    AliceSessionManager.ProcessOTRMessage(user, message);
                     break;
             }
         }
@@ -104,22 +126,10 @@ namespace ChatUI.Backend
         /// </summary>
         /// <param name="client">From which client the message is from</param>
         /// <param name="msg">The verification message (username)</param>
-        private void receiveUsername(TcpClient client, byte[] msg)
+        private void receiveUsername(TcpClient client, String AlicesFriendID)
         {
-            string AlicesFriendID = Encoding.ASCII.GetString(msg);
-
             usersbyUsername.Add(AlicesFriendID, client);
             usersbyTcpClient.Add(client, AlicesFriendID);
-
-            AliceSessionManager.OnOTREvent += new OTREventHandler(OnAliceOTRManagerEventHandler);
-
-            AliceSessionManager.CreateOTRSession(AlicesFriendID, true);
-
-            //Person with higher/lower IP is host.
-            if (AlicesFriendID.CompareTo(AlicesID) < 0)
-            {
-                AliceSessionManager.RequestOTRSession(AlicesFriendID, OTRSessionManager.GetSupportedOTRVersionList()[0]);
-            }
 
             cWindow.Dispatcher.Invoke(new Action(delegate()
             {
@@ -131,31 +141,69 @@ namespace ChatUI.Backend
         /// A "poke" to initiate a conversation which starts up a ChatWindow.
         /// </summary>
         /// <param name="client">From which client the message is from</param>
-        private void checkInternal(TcpClient client)
+        private void checkInternal(String user, String InternalMsgTypeValue)
         {
-            String user = null;
-            if (usersbyTcpClient.TryGetValue(client, out user))
+            switch (InternalMsgTypeValue)
             {
-                cWindow.Dispatcher.Invoke(new Action(delegate()
-                {
-                    cWindow.begin_Conversation(user);
-                }));
+                case InternalMsgType.SignOff:
+                    
+                    break;
+                case InternalMsgType.BeginConvo:
+                    cWindow.Dispatcher.Invoke(new Action(delegate()
+                    {
+                        cWindow.begin_Conversation(user);
+                    }));
+                    break;
+                case InternalMsgType.EndConvo:
+                    displayMessage(user, "has left chat.");
+                    ChatWindow convo = null;
+                    if (cWindow.chats.TryGetValue(user, out convo))
+                    {
+                        convo.Dispatcher.Invoke(new Action(delegate()
+                        {
+                            convo.textBoxEntryField.IsReadOnly = true;
+                        }));
+                    }
+                    if (user.CompareTo(AlicesID) < 0)
+                    {
+                        AliceSessionManager.CloseSession(user);
+                    }
+                    break;
+                default:
+                    break;
             }
+                
         }
 
-        /// <summary>
-        /// Chat messages received.
-        /// </summary>
-        /// <param name="client">From which client the message is from</param>
-        /// <param name="msg">The chat message to be displayed</param>
-        private void processChat(TcpClient client, byte[] msg)
-        {
-            String message = Encoding.ASCII.GetString(msg);
-
-            String AlicesFriendID;
-            if (usersbyTcpClient.TryGetValue(client, out AlicesFriendID))
+        private void userSignOff(String user){
+            if (user != null)
             {
-                AliceSessionManager.ProcessOTRMessage(AlicesFriendID, message);
+                ChatWindow chat = null;
+                if (cWindow.chats.TryGetValue(user, out chat))
+                {
+                    chat.Dispatcher.Invoke(new Action(delegate()
+                    {
+                        chat.Close();
+                    }));
+                }
+                cWindow.Dispatcher.Invoke(new Action(delegate()
+                {
+                    cWindow.OnlineUsers.Items.Remove(user);
+                }));
+                if (user.CompareTo(AlicesID) < 0)
+                {
+                    AliceSessionManager.CloseSession(user);
+                }
+                TcpClient client = null;
+                if (usersbyUsername.TryGetValue(user, out client))
+                {
+                    usersbyTcpClient.Remove(client);
+                    usersbyUsername.Remove(user);
+                }
+            }
+            else
+            {
+
             }
         }
 
@@ -181,14 +229,23 @@ namespace ChatUI.Backend
             AliceSessionManager.EncryptMessage(user, message);
         }
 
-        private void sendMessage(String user, String message)
+        private void sendMessage(String user, msgType type, String message)
         {
             byte[] msg = Encoding.ASCII.GetBytes(message);
 
             TcpClient client = null;
             if (usersbyUsername.TryGetValue(user, out client))
             {
-                nModule.message(client, msgType.Chat, msg);
+                nModule.message(client, type, msg);
+            }
+        }
+
+        public void closeChat(String user)
+        {
+            sendMessage(user, msgType.Internal, InternalMsgType.EndConvo);
+            if (user.CompareTo(AlicesID) < 0)
+            {
+                AliceSessionManager.CloseSession(user);
             }
         }
 
@@ -197,7 +254,17 @@ namespace ChatUI.Backend
         /// </summary>
         public void close()
         {
-            AliceSessionManager.CloseAllSessions();
+            TcpClient client = null;
+            byte[] SignOffMessage = Encoding.ASCII.GetBytes("0");
+
+            foreach(String user in usersbyUsername.Keys){
+                if(usersbyUsername.TryGetValue(user, out client)){
+                    nModule.message(client, msgType.Internal, SignOffMessage);
+                }
+            }
+
+            Thread.Sleep(1000);
+
             nModule.close();
         }
 
@@ -217,7 +284,7 @@ namespace ChatUI.Backend
                     break;
                 case OTR_EVENT.SEND:
                     //This is where you would send the data on the network. Next line is just a dummy line. e.GetMessage() will contain message to be sent
-                    sendMessage(e.GetSessionID(), e.GetMessage());
+                    sendMessage(e.GetSessionID(), msgType.Chat, e.GetMessage());
                     break;
                 case OTR_EVENT.ERROR:
                     //Some sort of error occurred. We should use these errors to decide if it is fatal (failure to verify key) or benign (message did not decrypt)
@@ -227,7 +294,7 @@ namespace ChatUI.Backend
                 case OTR_EVENT.READY:
                     //Fires when each user is ready for communication. Can't communicate prior to this.
                     Console.Out.WriteLine("TFC_SYSTEM_MESSAGE: Encrypted OTR session with {0} established \n", e.GetSessionID());
-                    AliceSessionManager.EncryptMessage(e.GetSessionID(), "If you can read this, encryption is successful.");
+                    AliceSessionManager.EncryptMessage(e.GetSessionID(), "If you can read this, encryption is successful.\n");
                     break;
                 case OTR_EVENT.DEBUG:
                     //Just for debug lines. Flagged using a true flag in the session manager construction
