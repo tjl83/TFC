@@ -72,7 +72,7 @@ namespace ChatUI.Backend
             TcpClient client = null;
             if (usersbyUsername.TryGetValue(user, out client))
             {
-                nModule.message(client, msgType.Internal, new byte[]{});
+                nModule.message(client, msgType.Internal, new byte[] { });
             }
         }
 
@@ -134,7 +134,8 @@ namespace ChatUI.Backend
         private void checkInternal(TcpClient client)
         {
             String user = null;
-            if(usersbyTcpClient.TryGetValue(client, out user)){
+            if (usersbyTcpClient.TryGetValue(client, out user))
+            {
                 cWindow.Dispatcher.Invoke(new Action(delegate()
                 {
                     cWindow.begin_Conversation(user);
