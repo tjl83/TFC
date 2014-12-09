@@ -112,6 +112,8 @@ namespace ChatUI.Backend
         {
             string AlicesFriendID = Encoding.ASCII.GetString(msg);
 
+            AliceSessionManager.OnOTREvent += new OTREventHandler(OnAliceOTRManagerEventHandler);
+
             AliceSessionManager.CreateOTRSession(AlicesFriendID, true);
 
             //Person with higher/lower IP is host.
@@ -155,19 +157,22 @@ namespace ChatUI.Backend
         {
             String message = Encoding.ASCII.GetString(msg);
 
-
             String AlicesFriendID;
             if (verifiedUsersClients.TryGetValue(client, out AlicesFriendID))
             {
                 AliceSessionManager.ProcessOTRMessage(AlicesFriendID, message);
-                ChatWindow chat = null;
-                if (cWindow.chats.TryGetValue(AlicesFriendID, out chat))
+            }
+        }
+
+        private void displayMessage(String AlicesFriendID, String message)
+        {
+            ChatWindow chat = null;
+            if (cWindow.chats.TryGetValue(AlicesFriendID, out chat))
+            {
+                chat.Dispatcher.Invoke(new Action(delegate()
                 {
-                    chat.Dispatcher.Invoke(new Action(delegate()
-                    {
-                        chat.DisplayReceivedMessage(message);
-                    }));
-                }
+                    chat.DisplayReceivedMessage(message);
+                }));
             }
         }
 
@@ -179,6 +184,10 @@ namespace ChatUI.Backend
         public void sendChatMessage(String user, String message)
         {
             AliceSessionManager.EncryptMessage(user, message);
+        }
+
+        private void sendEncryptedMessage(String user, String message)
+        {
             byte[] msg = Encoding.ASCII.GetBytes(message);
 
             TcpClient client = null;
@@ -195,5 +204,54 @@ namespace ChatUI.Backend
         {
             nModule.close();
         }
+
+
+        #region OTRAdditions
+
+        //TODO: This manager needs to be updated to use the network traffic
+        private void OnAliceOTRManagerEventHandler(object source, OTREventArgs e)
+        {
+
+            switch (e.GetOTREvent())
+            {
+                case OTR_EVENT.MESSAGE:
+                    //This event happens when a message is decrypted successfully
+                    //Console.WriteLine("{0}: {1} \n", e.GetSessionID(), e.GetMessage());
+                    displayMessage(e.GetSessionID(), e.GetMessage());
+                    break;
+                case OTR_EVENT.SEND:
+                    //This is where you would send the data on the network. Next line is just a dummy line. e.GetMessage() will contain message to be sent
+                    sendChatMessage(e.GetSessionID() , e.GetMessage());
+                    break;
+                case OTR_EVENT.ERROR:
+                    //Some sort of error occurred. We should use these errors to decide if it is fatal (failure to verify key) or benign (message did not decrypt)
+                    Console.Error.WriteLine("Alice: OTR Error: {0} \n", e.GetErrorMessage());
+                    Console.Error.WriteLine("Alice: OTR Error Verbose: {0} \n", e.GetErrorVerbose());
+                    break;
+                case OTR_EVENT.READY:
+                    //Fires when each user is ready for communication. Can't communicate prior to this.
+                    Console.Out.WriteLine("TFC_SYSTEM_MESSAGE: Encrypted OTR session with {0} established \n", e.GetSessionID());
+                    AliceSessionManager.EncryptMessage(e.GetSessionID(), "If you can read this, encryption is successful.");
+                    break;
+                case OTR_EVENT.DEBUG:
+                    //Just for debug lines. Flagged using a true flag in the session manager construction
+                    //cout.WriteLine("DEBUG: " + e.GetMessage() + "\n");
+                    //cout.Flush();
+                    break;
+                case OTR_EVENT.EXTRA_KEY_REQUEST:
+                    //Allow for symmetric AES key usage. Only for OTR v3+.
+                    //I doubt we need this.
+                    break;
+                case OTR_EVENT.SMP_MESSAGE:
+                    //Fires after SMP process finishes
+                    Console.Out.WriteLine("Authentication Notice: " + e.GetMessage() + "\n");
+                    break;
+                case OTR_EVENT.CLOSED:
+                    //Fires when OTR session closes
+                    Console.Out.WriteLine("TFC_SYSTEM_MESSAGE: Encrypted OTR session with {0} closed \n", e.GetSessionID());
+                    break;
+            }
+        }
+        #endregion
     }
 }
