@@ -22,9 +22,8 @@ namespace ChatUI.Backend
 
         private OTRSessionManager AliceSessionManager;
 
-        public Dictionary<string, TcpClient> verifiedUsersbyUsername;
-        public Dictionary<TcpClient, string> verifiedUsersbyTcpClient;
-        private HashSet<TcpClient> unverifiedUsers;
+        public Dictionary<string, TcpClient> usersbyUsername;
+        public Dictionary<TcpClient, string> usersbyTcpClient;
 
         public Session(ClientWindow window, string my_name, int port)
         {
@@ -33,9 +32,8 @@ namespace ChatUI.Backend
             AlicesID = my_name;
             AliceSessionManager = new OTRSessionManager(AlicesID);
 
-            verifiedUsersbyUsername = new Dictionary<string, TcpClient>();
-            verifiedUsersbyTcpClient = new Dictionary<TcpClient, string>();
-            unverifiedUsers = new HashSet<TcpClient>();
+            usersbyUsername = new Dictionary<string, TcpClient>();
+            usersbyTcpClient = new Dictionary<TcpClient, string>();
         }
 
         /// <summary>
@@ -47,7 +45,6 @@ namespace ChatUI.Backend
             TcpClient newUser = nModule.findUser(ip, port);
             if (newUser != null)
             {
-                unverifiedUsers.Add(newUser);
                 sendUsername(newUser);
             }
         }
@@ -60,7 +57,6 @@ namespace ChatUI.Backend
         public void signalNewUser(TcpClient newUser)
         {
             // TODO: Check to see if the user was already verified.
-            unverifiedUsers.Add(newUser);
             sendUsername(newUser);
         }
 
@@ -74,7 +70,7 @@ namespace ChatUI.Backend
         public void beginConversation(String user)
         {
             TcpClient client = null;
-            if (verifiedUsersbyUsername.TryGetValue(user, out client))
+            if (usersbyUsername.TryGetValue(user, out client))
             {
                 nModule.message(client, msgType.Internal, new byte[]{});
             }
@@ -112,6 +108,9 @@ namespace ChatUI.Backend
         {
             string AlicesFriendID = Encoding.ASCII.GetString(msg);
 
+            usersbyUsername.Add(AlicesFriendID, client);
+            usersbyTcpClient.Add(client, AlicesFriendID);
+
             AliceSessionManager.OnOTREvent += new OTREventHandler(OnAliceOTRManagerEventHandler);
 
             AliceSessionManager.CreateOTRSession(AlicesFriendID, true);
@@ -122,15 +121,10 @@ namespace ChatUI.Backend
                 AliceSessionManager.RequestOTRSession(AlicesFriendID, OTRSessionManager.GetSupportedOTRVersionList()[0]);
             }
 
-            verifiedUsersbyUsername.Add(AlicesFriendID, client);
-            verifiedUsersbyTcpClient.Add(client, AlicesFriendID);
-
             cWindow.Dispatcher.Invoke(new Action(delegate()
             {
                 cWindow.OnlineUsers.Items.Add(AlicesFriendID);
             }));
-
-            unverifiedUsers.Remove(client);
         }
 
         /// <summary>
@@ -140,7 +134,7 @@ namespace ChatUI.Backend
         private void checkInternal(TcpClient client)
         {
             String user = null;
-            if(verifiedUsersbyTcpClient.TryGetValue(client, out user)){
+            if(usersbyTcpClient.TryGetValue(client, out user)){
                 cWindow.Dispatcher.Invoke(new Action(delegate()
                 {
                     cWindow.begin_Conversation(user);
@@ -158,7 +152,7 @@ namespace ChatUI.Backend
             String message = Encoding.ASCII.GetString(msg);
 
             String AlicesFriendID;
-            if (verifiedUsersbyTcpClient.TryGetValue(client, out AlicesFriendID))
+            if (usersbyTcpClient.TryGetValue(client, out AlicesFriendID))
             {
                 AliceSessionManager.ProcessOTRMessage(AlicesFriendID, message);
             }
@@ -186,12 +180,12 @@ namespace ChatUI.Backend
             AliceSessionManager.EncryptMessage(user, message);
         }
 
-        private void sendEncryptedMessage(String user, String message)
+        private void sendMessage(String user, String message)
         {
             byte[] msg = Encoding.ASCII.GetBytes(message);
 
             TcpClient client = null;
-            if (verifiedUsersbyUsername.TryGetValue(user, out client))
+            if (usersbyUsername.TryGetValue(user, out client))
             {
                 nModule.message(client, msgType.Chat, msg);
             }
@@ -222,7 +216,7 @@ namespace ChatUI.Backend
                     break;
                 case OTR_EVENT.SEND:
                     //This is where you would send the data on the network. Next line is just a dummy line. e.GetMessage() will contain message to be sent
-                    sendChatMessage(e.GetSessionID() , e.GetMessage());
+                    sendMessage(e.GetSessionID(), e.GetMessage());
                     break;
                 case OTR_EVENT.ERROR:
                     //Some sort of error occurred. We should use these errors to decide if it is fatal (failure to verify key) or benign (message did not decrypt)
@@ -253,6 +247,7 @@ namespace ChatUI.Backend
                     break;
             }
         }
+
         #endregion
     }
 }
