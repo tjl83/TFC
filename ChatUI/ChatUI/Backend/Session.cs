@@ -83,7 +83,8 @@ namespace ChatUI.Backend
         /// <summary>
         /// This is the signaled function that the NetworkModule calls when it receives a message.
         /// </summary>
-        /// <param name="type"></param>
+        /// <param name="client">From which client the message is from</param>
+        /// <param name="type">What type of message it is: Verification for initial messages, Internal for beginning a conversation, and Chat for chat-related messages</param>
         /// <param name="msg"></param>
         public void signalNewMessage(TcpClient client, msgType type, byte[] msg)
         {
@@ -101,17 +102,33 @@ namespace ChatUI.Backend
             }
         }
 
+        /// <summary>
+        /// This is the method called when a Verification message is received from another client.
+        /// The first verification message received would be the username.
+        /// </summary>
+        /// <param name="client">From which client the message is from</param>
+        /// <param name="msg">The verification message (username)</param>
         private void receiveVerification(TcpClient client, byte[] msg)
         {
             string user = Encoding.ASCII.GetString(msg);
+
+                                                                                            //Username is received here, begin KeySwapping
+
             verifiedUsersNames.Add(user, client);
             verifiedUsersClients.Add(client, user);
+
             cWindow.Dispatcher.Invoke(new Action(delegate()
             {
                 cWindow.OnlineUsers.Items.Add(user);
             }));
+
+            unverifiedUsers.Remove(client);
         }
 
+        /// <summary>
+        /// A "poke" to initiate a conversation which starts up a ChatWindow.
+        /// </summary>
+        /// <param name="client">From which client the message is from</param>
         private void checkInternal(TcpClient client)
         {
             String user = null;
@@ -123,6 +140,11 @@ namespace ChatUI.Backend
             }
         }
 
+        /// <summary>
+        /// Chat messages received.
+        /// </summary>
+        /// <param name="client">From which client the message is from</param>
+        /// <param name="msg">The chat message to be displayed</param>
         private void processChat(TcpClient client, byte[] msg)
         {
             String message = Encoding.ASCII.GetString(msg);
@@ -140,7 +162,12 @@ namespace ChatUI.Backend
             }
         }
 
-        public void sendMessage(String user, String message)
+        /// <summary>
+        /// This method is for sending chat-related messages from the UI
+        /// </summary>
+        /// <param name="user">Which user this message is to be sent to</param>
+        /// <param name="message">The message to be sent</param>
+        public void sendChatMessage(String user, String message)
         {
             byte[] msg = Encoding.ASCII.GetBytes(message);
 
@@ -151,6 +178,9 @@ namespace ChatUI.Backend
             }
         }
 
+        /// <summary>
+        /// This should close all background threads.
+        /// </summary>
         public void close()
         {
             nModule.close();
