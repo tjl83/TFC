@@ -77,3 +77,4 @@ C:\Users\legolaptop\git\Tinfoil-Chat\TFC\ChatUI\ChatUI\obj\Debug\ChatUI_MarkupCo
 C:\Users\legolaptop\git\Tinfoil-Chat\TFC\ChatUI\ChatUI\obj\Debug\ChatUI.g.resources
 C:\Users\legolaptop\git\Tinfoil-Chat\TFC\ChatUI\ChatUI\obj\Debug\ChatUI.Properties.Resources.resources
 C:\Users\legolaptop\git\Tinfoil-Chat\TFC\ChatUI\ChatUI\obj\Debug\ChatUI.csproj.GenerateResource.Cache
+C:\Users\legolaptop\git\TFC\ChatUI\ChatUI\obj\Debug\ChatUI.csprojResolveAssemblyReference.cache

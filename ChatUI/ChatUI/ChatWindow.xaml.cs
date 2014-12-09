@@ -56,7 +56,7 @@ namespace ChatUI
 
         private void sendMessage()
         {
-            DisplayMessage("You: " + textBoxEntryField.Text + Environment.NewLine);
+            textBoxChatPane.Text += ("You: " + textBoxEntryField.Text + Environment.NewLine);
             cSession.sendMessage(username, textBoxEntryField.Text + Environment.NewLine);
             textBoxEntryField.Clear();
         }

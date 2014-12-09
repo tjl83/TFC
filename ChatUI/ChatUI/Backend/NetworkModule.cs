@@ -118,8 +118,14 @@ namespace ChatUI.Backend
 
             while (isOnline && clSocket.Connected)
             {
-                networkStream = clSocket.GetStream();
-                networkStream.Read(bytesReceived, 0, clSocket.ReceiveBufferSize);
+                try{
+                    networkStream = clSocket.GetStream();
+                    networkStream.Read(bytesReceived, 0, clSocket.ReceiveBufferSize);
+                }
+                catch (Exception e)
+                {
+                    Console.Error.WriteLine("In clientListener: " + e.Message);
+                }
 
                 //Find end of message (find first byte of size 0 in array)
                 int msgSize = 1;

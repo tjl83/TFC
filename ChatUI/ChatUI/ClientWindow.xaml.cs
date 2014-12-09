@@ -66,6 +66,14 @@ namespace ChatUI
                 currentSession.beginConversation(username);
                 chat.Show();
             }
+            else
+            {
+                ChatWindow chat = null;
+                if (chats.TryGetValue(username, out chat))
+                {
+                    chat.BringIntoView();
+                }
+            }
         }
 
         private void Exit(object sender, CancelEventArgs e)
