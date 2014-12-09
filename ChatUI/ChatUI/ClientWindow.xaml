@@ -6,6 +6,7 @@
         <Grid.RowDefinitions>
             <RowDefinition Height="20" />
             <RowDefinition Height="auto" />
+            <RowDefinition Height="auto" />
         </Grid.RowDefinitions>
         <Menu Grid.Row="0">
             <MenuItem Header="TinFoilChat">
@@ -14,7 +15,8 @@
             <MenuItem Header="Tools" />
             <MenuItem Header="Help" />
         </Menu>
-        <ListBox Name="OnlineUsers" HorizontalContentAlignment="Stretch" Grid.Row="1" MouseDoubleClick="OnlineUsers_MouseDoubleClick">
+        <Label HorizontalAlignment="Stretch" Grid.Row="1" MouseDoubleClick="Find_User">Find User</Label>
+        <ListBox Name="OnlineUsers" HorizontalContentAlignment="Stretch" Grid.Row="2" MouseDoubleClick="OnlineUsers_MouseDoubleClick">
             <ListBox.ContextMenu>
                 <ContextMenu>
                     <MenuItem Header="Start Conversation" Click="MenuItemStartConversation_Click"/>
