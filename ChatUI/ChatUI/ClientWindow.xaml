@@ -12,10 +12,7 @@
             <MenuItem Header="TinFoilChat">
                 <MenuItem Header="Find User" Click="Find_User" />
             </MenuItem>
-            <MenuItem Header="Tools" />
-            <MenuItem Header="Help" />
         </Menu>
-        <Label HorizontalAlignment="Stretch" Grid.Row="1" MouseDoubleClick="Find_User">Find User</Label>
         <ListBox Name="OnlineUsers" HorizontalContentAlignment="Stretch" Grid.Row="2" MouseDoubleClick="OnlineUsers_MouseDoubleClick">
             <ListBox.ContextMenu>
                 <ContextMenu>

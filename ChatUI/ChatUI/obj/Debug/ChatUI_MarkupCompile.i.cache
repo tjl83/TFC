@@ -4,16 +4,16 @@
 winexe
 C#
 .cs
-C:\Users\legolaptop\git\TFC\ChatUI\ChatUI\obj\Debug\
+C:\Users\James\Documents\GitHub\TFC\ChatUI\ChatUI\obj\Debug\
 ChatUI
 none
 false
 DEBUG;TRACE
-C:\Users\legolaptop\git\TFC\ChatUI\ChatUI\App.xaml
+C:\Users\James\Documents\GitHub\TFC\ChatUI\ChatUI\App.xaml
 51723508460
 
-161972860990
-20-1314387269
+161718215530
+20-609193989
 ChatWindow.xaml;ClientWindow.xaml;Dialogue\FindUserDialogue.xaml;Dialogue\UserFoundDialogue.xaml;MainWindow.xaml;
 
 False
