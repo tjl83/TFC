@@ -28,7 +28,14 @@ namespace ChatUI.Dialogue
 
         private void btnDialogOk_Click(object sender, RoutedEventArgs e)
         {
-            Session.currentSession.findUser(ip.Text);
+            int portNum = 420;
+            try{
+                portNum = Int32.Parse(port.Text);
+            }
+            catch(Exception err){
+                Console.Error.WriteLine(err.Message);
+            }
+            Session.currentSession.findUser(ip.Text,portNum);
             this.DialogResult = true;
         }
 

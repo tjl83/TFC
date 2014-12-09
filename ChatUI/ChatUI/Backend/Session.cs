@@ -60,6 +60,11 @@ namespace ChatUI.Backend
         /// <param name="ip">The IP address the user is located at</param>
         public void findUser(String ip)
         {
+            findUser(ip, 420);
+        } 
+
+        public void findUser(String ip, int port)
+        {
             TcpClient newUser = nModule.findUser(ip);
             unverifiedUsers.Add(newUser);
             beginVerify(newUser);
