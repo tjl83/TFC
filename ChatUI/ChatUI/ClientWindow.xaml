@@ -3,27 +3,23 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="TinFoil Chat" Height="800" Width="300" Closing="Exit">
     <Grid>
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="141*"/>
-            <ColumnDefinition Width="151*"/>
-        </Grid.ColumnDefinitions>
         <Grid.RowDefinitions>
             <RowDefinition Height="20" />
-            <RowDefinition Height="20" />
+            <RowDefinition Height="auto" />
         </Grid.RowDefinitions>
-        <Menu Grid.Row="0" Grid.ColumnSpan="2">
+        <Menu Grid.Row="0">
             <MenuItem Header="TinFoilChat">
                 <MenuItem Header="Find User" Click="Find_User" />
             </MenuItem>
             <MenuItem Header="Tools" />
             <MenuItem Header="Help" />
         </Menu>
-        <ListBox Name="OnlineUsers" HorizontalContentAlignment="Stretch" Grid.Row="1">
-            <ListBox.ItemTemplate>
-                <DataTemplate>
-                    <TextBlock Text="{Binding Title}" />
-                </DataTemplate>
-            </ListBox.ItemTemplate>
+        <ListBox Name="OnlineUsers" HorizontalContentAlignment="Stretch" Grid.Row="1" MouseDoubleClick="OnlineUsers_MouseDoubleClick">
+            <ListBox.ContextMenu>
+                <ContextMenu>
+                    <MenuItem Header="Start Conversation" Click="MenuItemStartConversation_Click"/>
+                </ContextMenu>
+            </ListBox.ContextMenu>
         </ListBox>
     </Grid>
 </Window>

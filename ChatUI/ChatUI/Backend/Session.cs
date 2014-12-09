@@ -108,6 +108,7 @@ namespace ChatUI.Backend
         {
             string message = Encoding.ASCII.GetString(msg);
             UserFoundDialogue dialogue = new UserFoundDialogue(message);
+            verifiedUsernames.Add(message);
         }
 
         private void checkInternal(Message message)

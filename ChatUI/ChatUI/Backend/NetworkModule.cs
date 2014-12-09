@@ -75,15 +75,21 @@ namespace ChatUI.Backend
 
             while (isOnline)
             {
-                TcpClient nextClient = pListener.AcceptTcpClient();
-                IPAddress nextClientIP = ((IPEndPoint)nextClient.Client.RemoteEndPoint).Address;
-                if (ignoreList.Contains(nextClientIP))
-                {
-                    nextClient.Close();
-                    continue;
+                try {
+                    TcpClient nextClient = pListener.AcceptTcpClient();
+                    IPAddress nextClientIP = ((IPEndPoint)nextClient.Client.RemoteEndPoint).Address;
+                    if (ignoreList.Contains(nextClientIP))
+                    {
+                        nextClient.Close();
+                        continue;
+                    }
+                    addClient(nextClient);
+                    cSess.signalNewUser(nextClient);
                 }
-                addClient(nextClient);
-                cSess.signalNewUser(nextClient);
+                catch (Exception e)
+                {
+                    Console.Error.WriteLine(e.Message);
+                }
             }
 
             pListener.Stop();
@@ -103,8 +109,14 @@ namespace ChatUI.Backend
         public TcpClient findUser(string ip, int port)
         {
             TcpClient client = null;
-            client = new TcpClient(ip, port);
-            addClient(client);
+            try {
+                client = new TcpClient(ip, port);
+                addClient(client);
+            }
+            catch (Exception e)
+            {
+                Console.Error.WriteLine(e.Message);
+            }
             return client;
         }
 

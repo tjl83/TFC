@@ -37,6 +37,19 @@ namespace ChatUI
                 return;
         }
 
+        void OnlineUsers_MouseDoubleClick(object sender, MouseEventArgs e)
+        {
+            if (OnlineUsers.SelectedItem != null)
+            {
+                MessageBox.Show(OnlineUsers.SelectedItem.ToString());
+            }
+        }
+
+        private void MenuItemStartConversation_Click(object sender, RoutedEventArgs args)
+        {
+
+        }
+
         private void Exit(object sender, CancelEventArgs e)
         {
             Session.currentSession.close();

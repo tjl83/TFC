@@ -4,16 +4,16 @@
 winexe
 C#
 .cs
-C:\Users\legolaptop\git\Tinfoil-Chat\TFC\ChatUI\ChatUI\obj\Debug\
+C:\Users\legolaptop\git\TFC\ChatUI\ChatUI\obj\Debug\
 ChatUI
 none
 false
 DEBUG;TRACE
-C:\Users\legolaptop\git\Tinfoil-Chat\TFC\ChatUI\ChatUI\App.xaml
+C:\Users\legolaptop\git\TFC\ChatUI\ChatUI\App.xaml
 51723508460
 
 161972860990
-20-842162904
+20-1314387269
 ChatWindow.xaml;ClientWindow.xaml;Dialogue\FindUserDialogue.xaml;Dialogue\UserFoundDialogue.xaml;MainWindow.xaml;
 
 False
