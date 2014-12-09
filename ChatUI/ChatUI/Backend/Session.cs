@@ -134,7 +134,7 @@ namespace ChatUI.Backend
                 {
                     chat.Dispatcher.Invoke(new Action(delegate()
                     {
-                        chat.DisplayMessage(message);
+                        chat.DisplayReceivedMessage(message);
                     }));
                 }
             }

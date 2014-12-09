@@ -13,11 +13,10 @@
             <ColumnDefinition Width="100*" />
         </Grid.ColumnDefinitions>
 
-        <ScrollViewer Grid.Row="1">
-            <TextBox Height="Auto" HorizontalAlignment="Stretch" Name="textBoxChatPane" VerticalAlignment="Stretch" Width="Auto" Grid.Row="1" Grid.Column="0"/>
+        <ScrollViewer Name="ScrollChat" Grid.Row="1" Grid.ColumnSpan="2">
+            <TextBox TextWrapping="Wrap" Height="Auto" HorizontalAlignment="Stretch" Name="textBoxChatPane" VerticalAlignment="Stretch" Width="Auto" Grid.Row="1" Grid.Column="0"/>
         </ScrollViewer>
-        <TextBox BorderThickness="1"  IsReadOnly="True" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Margin="6,6,6,0" Name="UsersPane" Width="Auto" Grid.Row="1" Grid.Column="1"/>
-
+        
         <TextBox Height="Auto" HorizontalAlignment="Stretch" Margin="6,6,6,6" Name="textBoxEntryField" VerticalAlignment="Stretch" Width="Auto" Grid.Row="2" Grid.Column="0" KeyDown="textBoxEntryField_KeyDown" />
         <Button Height="Auto" HorizontalAlignment="Stretch" Margin="6,6,6,6" Name="sendBtn" VerticalAlignment="Stretch" Width="Auto" Grid.Row="2" Grid.Column="1" Content="Send" Click="sendBtn_Click" />
     </Grid>

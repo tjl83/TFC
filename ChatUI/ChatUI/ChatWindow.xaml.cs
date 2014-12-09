@@ -36,9 +36,22 @@ namespace ChatUI
             username = user;
         }
 
-        public void DisplayMessage(string message)
+        private void DisplayMessage(string message)
         {
-            textBoxChatPane.Text += (username + ": " + message);
+            textBoxChatPane.Text += (message);
+            ScrollChat.ScrollToBottom();
+        }
+
+        public void DisplayReceivedMessage(string message)
+        {
+            DisplayMessage(username + ": " + message);
+        }
+
+        private void sendMessage()
+        {
+            DisplayMessage("You: " + textBoxEntryField.Text + Environment.NewLine);
+            cSession.sendMessage(username, textBoxEntryField.Text + Environment.NewLine);
+            textBoxEntryField.Clear();
         }
 
         private void textBoxEntryField_KeyDown(object sender, KeyEventArgs e)
@@ -52,13 +65,6 @@ namespace ChatUI
         private void sendBtn_Click(object sender, RoutedEventArgs e)
         {
             sendMessage();
-        }
-
-        private void sendMessage()
-        {
-            textBoxChatPane.Text += ("You: " + textBoxEntryField.Text + Environment.NewLine);
-            cSession.sendMessage(username, textBoxEntryField.Text + Environment.NewLine);
-            textBoxEntryField.Clear();
         }
     }
 }
