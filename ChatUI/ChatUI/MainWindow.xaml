@@ -23,7 +23,7 @@
                             Mask="000"
                             ValueDataType="{x:Type s:Int16}">420</xctk:MaskedTextBox>
         
-        <Button Content="Login" Margin="50,0,130,20" Click="Attempt_Login" Grid.Row="2" />
-        <Button Content="Cancel" Margin="130,0,50,20" Click="Exit" Grid.Row="2" />
+        <Button IsDefault="True" Margin="50,0,130,20" Click="Attempt_Login" Grid.Row="2">_Login</Button>
+        <Button IsCancel="True" Margin="130,0,50,20" Click="Exit" Grid.Row="2">_Cancel</Button>
     </Grid>
 </Window>

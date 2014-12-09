@@ -23,16 +23,20 @@ namespace ChatUI
     /// </summary>
     public partial class ClientWindow : Window
     {
+        private Session currentSession;
+        public Dictionary<String, ChatWindow> chats;
+
         public ClientWindow(string username, short port)
         {
             InitializeComponent();
-            Session.currentSession = new Session(this, username, port);
-            OnlineUsers.ItemsSource = Session.currentSession.getUsers();
+
+            currentSession = new Session(this, username, port);
+            chats = new Dictionary<string, ChatWindow>();
         }
 
         private void Find_User(object sender, RoutedEventArgs args)
         {
-            FindUserDialogue findUserDialogue = new FindUserDialogue();
+            FindUserDialogue findUserDialogue = new FindUserDialogue(currentSession);
             if (findUserDialogue.ShowDialog() == true)
                 return;
         }
@@ -41,18 +45,32 @@ namespace ChatUI
         {
             if (OnlineUsers.SelectedItem != null)
             {
-                MessageBox.Show(OnlineUsers.SelectedItem.ToString());
+                begin_Conversation(OnlineUsers.SelectedItem.ToString());
             }
         }
 
-        private void MenuItemStartConversation_Click(object sender, RoutedEventArgs args)
+        void MenuItemStartConversation_Click(object sender, RoutedEventArgs args)
         {
+            if (OnlineUsers.SelectedItem != null)
+            {
+                begin_Conversation(OnlineUsers.SelectedItem.ToString());
+            }
+        }
 
+        public void begin_Conversation(String username)
+        {
+            if (!chats.ContainsKey(username))
+            {
+                ChatWindow chat = new ChatWindow(currentSession, username);
+                chats.Add(username, chat);
+                currentSession.beginConversation(username);
+                chat.Show();
+            }
         }
 
         private void Exit(object sender, CancelEventArgs e)
         {
-            Session.currentSession.close();
+            currentSession.close();
         }
     }
 }

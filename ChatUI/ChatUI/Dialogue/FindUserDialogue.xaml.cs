@@ -21,9 +21,12 @@ namespace ChatUI.Dialogue
     /// </summary>
     public partial class FindUserDialogue : Window
     {
-        public FindUserDialogue()
+        private Session cSess;
+
+        public FindUserDialogue(Session currentSession)
         {
             InitializeComponent();
+            cSess = currentSession;
         }
 
         private void btnDialogOk_Click(object sender, RoutedEventArgs e)
@@ -35,7 +38,7 @@ namespace ChatUI.Dialogue
             catch(Exception err){
                 Console.Error.WriteLine(err.Message);
             }
-            Session.currentSession.findUser(ip.Text,portNum);
+            cSess.findUser(ip.Text,portNum);
             this.DialogResult = true;
         }
 

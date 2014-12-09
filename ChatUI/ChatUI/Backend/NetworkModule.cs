@@ -13,41 +13,24 @@ namespace ChatUI.Backend
 
     public class NetworkModule
     {
-        public static NetworkModule networkModule;
-
-        private static Session cSess = Session.currentSession;
+        private Session cSess;
 
         bool isOnline;
-        int portnum = 420;
 
+        int portnum;
         TcpListener portListener;
         HashSet<TcpClient> connectedUsers;
 
         HashSet<IPAddress> ignoreList;
-
-        public NetworkModule()
-        {
-            initialize();
-        }
-
-        public NetworkModule(int port)
+        public NetworkModule(Session currentSess, int port)
         {
             portnum = port;
-            initialize();
+            initialize(currentSess);
         }
 
-        private void initialize()
+        private void initialize(Session currentSess)
         {
-            if (networkModule == null)
-            {
-                networkModule = this;
-            }
-            else
-            {
-                throw new Exception("Attempting to create a second network module.");
-            }
-
-            cSess = Session.currentSession;
+            cSess = currentSess;
 
             isOnline = true;
 
@@ -88,16 +71,11 @@ namespace ChatUI.Backend
                 }
                 catch (Exception e)
                 {
-                    Console.Error.WriteLine(e.Message);
+                    Console.Error.WriteLine("In listenForConnection" + e.Message);
                 }
             }
 
             pListener.Stop();
-        }
-
-        public TcpClient findUser(string ip)
-        {
-            return findUser(ip, portnum);
         }
 
         /// <summary>
@@ -115,7 +93,7 @@ namespace ChatUI.Backend
             }
             catch (Exception e)
             {
-                Console.Error.WriteLine(e.Message);
+                Console.Error.WriteLine("In findUser: " + e.Message);
             }
             return client;
         }
@@ -149,6 +127,7 @@ namespace ChatUI.Backend
                 {
                     if (byt == 0)
                     {
+                        msgSize--;
                         break;
                     }
                     msgSize++;

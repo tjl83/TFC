@@ -15,59 +15,41 @@ namespace ChatUI.Backend
 {
     public class Session
     {
-        public static Session currentSession;
-
-        private static NetworkModule nModule = NetworkModule.networkModule;
+        private static NetworkModule nModule;
         private static ClientWindow cWindow;
 
         private string username;
 
         private OTRSessionManager otrManager;
 
-        private List<string> verifiedUsernames;
-        private Dictionary<string, TcpClient> verifiedUsers;
+        public Dictionary<string, TcpClient> verifiedUsersNames;
+        public Dictionary<TcpClient, string> verifiedUsersClients;
         private HashSet<TcpClient> unverifiedUsers;
 
         public Session(ClientWindow window, string my_name, int port)
         {
-            if (currentSession == null)
-            {
-                currentSession = this;
-            }
-            else
-            {
-                throw new Exception("Attempting to create a second session.");
-            }
-
-            nModule = new NetworkModule(port);
+            nModule = new NetworkModule(this, port);
             cWindow = window;
             username = my_name;
             otrManager = new OTRSessionManager(username);
 
-            verifiedUsernames = new List<string>();
-            verifiedUsers = new Dictionary<string, TcpClient>();
+            verifiedUsersNames = new Dictionary<string, TcpClient>();
+            verifiedUsersClients = new Dictionary<TcpClient, string>();
             unverifiedUsers = new HashSet<TcpClient>();
-        }
-
-        public List<string> getUsers()
-        {
-            return verifiedUsernames;
         }
 
         /// <summary>
         /// This is the function the UI calls to add a new user
         /// </summary>
         /// <param name="ip">The IP address the user is located at</param>
-        public void findUser(String ip)
-        {
-            findUser(ip, 420);
-        } 
-
         public void findUser(String ip, int port)
         {
-            TcpClient newUser = nModule.findUser(ip);
-            unverifiedUsers.Add(newUser);
-            beginVerify(newUser);
+            TcpClient newUser = nModule.findUser(ip, port);
+            if (newUser != null)
+            {
+                unverifiedUsers.Add(newUser);
+                beginVerify(newUser);
+            }
         }
 
         /// <summary>
@@ -89,6 +71,15 @@ namespace ChatUI.Backend
             nModule.message(client, msgType.Verification, usernameBytes);
         }
 
+        public void beginConversation(String user)
+        {
+            TcpClient client = null;
+            if (verifiedUsersNames.TryGetValue(user, out client))
+            {
+                nModule.message(client, msgType.Internal, new byte[]{});
+            }
+        }
+
         /// <summary>
         /// This is the signaled function that the NetworkModule calls when it receives a message.
         /// </summary>
@@ -99,31 +90,65 @@ namespace ChatUI.Backend
             switch (type)
             {
                 case msgType.Verification:
-                    receiveVerification(msg);
+                    receiveVerification(client, msg);
                     break;
                 case msgType.Internal:
-                    Message message = new Message(msg);
-                    checkInternal(message);
+                    checkInternal(client);
                     break;
                 case msgType.Chat:
+                    processChat(client, msg);
                     break;
             }
         }
-        private void receiveVerification(byte[] msg)
+
+        private void receiveVerification(TcpClient client, byte[] msg)
         {
-            string message = Encoding.ASCII.GetString(msg);
-            UserFoundDialogue dialogue = new UserFoundDialogue(message);
-            verifiedUsernames.Add(message);
+            string user = Encoding.ASCII.GetString(msg);
+            verifiedUsersNames.Add(user, client);
+            verifiedUsersClients.Add(client, user);
+            cWindow.Dispatcher.Invoke(new Action(delegate()
+            {
+                cWindow.OnlineUsers.Items.Add(user);
+            }));
         }
 
-        private void checkInternal(Message message)
+        private void checkInternal(TcpClient client)
         {
-
+            String user = null;
+            if(verifiedUsersClients.TryGetValue(client, out user)){
+                cWindow.Dispatcher.Invoke(new Action(delegate()
+                {
+                    cWindow.begin_Conversation(user);
+                }));
+            }
         }
 
-        private void processChat(Message message)
+        private void processChat(TcpClient client, byte[] msg)
         {
+            String message = Encoding.ASCII.GetString(msg);
 
+            String username;
+            if(verifiedUsersClients.TryGetValue(client, out username)){
+                ChatWindow chat = null;
+                if (cWindow.chats.TryGetValue(username, out chat))
+                {
+                    chat.Dispatcher.Invoke(new Action(delegate()
+                    {
+                        chat.DisplayMessage(message);
+                    }));
+                }
+            }
+        }
+
+        public void sendMessage(String user, String message)
+        {
+            byte[] msg = Encoding.ASCII.GetBytes(message);
+
+            TcpClient client = null;
+            if (verifiedUsersNames.TryGetValue(user, out client))
+            {
+                nModule.message(client, msgType.Chat, msg);
+            }
         }
 
         public void close()

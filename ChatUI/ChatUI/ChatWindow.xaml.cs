@@ -26,16 +26,19 @@ namespace ChatUI
     /// </summary>
     public partial class ChatWindow : Window
     {
-        private Session cSession = Session.currentSession;
+        private Session cSession;
+        private String username;
 
-        public ChatWindow()
+        public ChatWindow(Session currentSession, String user)
         {
             InitializeComponent();
+            cSession = currentSession;
+            username = user;
         }
 
         public void DisplayMessage(string message)
         {
-            textBoxChatPane.Text += (message);
+            textBoxChatPane.Text += (username + ": " + message);
         }
 
         private void textBoxEntryField_KeyDown(object sender, KeyEventArgs e)
@@ -53,7 +56,9 @@ namespace ChatUI
 
         private void sendMessage()
         {
-            ;
+            DisplayMessage("You: " + textBoxEntryField.Text + Environment.NewLine);
+            cSession.sendMessage(username, textBoxEntryField.Text + Environment.NewLine);
+            textBoxEntryField.Clear();
         }
     }
 }
