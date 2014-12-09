@@ -18,9 +18,9 @@ namespace ChatUI.Backend
         private static NetworkModule nModule;
         private static ClientWindow cWindow;
 
-        private string username;
+        private string AlicesID;
 
-        private OTRSessionManager otrManager;
+        private OTRSessionManager AliceSessionManager;
 
         public Dictionary<string, TcpClient> verifiedUsersNames;
         public Dictionary<TcpClient, string> verifiedUsersClients;
@@ -30,8 +30,8 @@ namespace ChatUI.Backend
         {
             nModule = new NetworkModule(this, port);
             cWindow = window;
-            username = my_name;
-            otrManager = new OTRSessionManager(username);
+            AlicesID = my_name;
+            AliceSessionManager = new OTRSessionManager(AlicesID);
 
             verifiedUsersNames = new Dictionary<string, TcpClient>();
             verifiedUsersClients = new Dictionary<TcpClient, string>();
@@ -67,7 +67,7 @@ namespace ChatUI.Backend
 
         private void beginVerify(TcpClient client)
         {
-            byte[] usernameBytes = Encoding.ASCII.GetBytes(username);
+            byte[] usernameBytes = Encoding.ASCII.GetBytes(AlicesID);
             nModule.message(client, msgType.Verification, usernameBytes);
         }
 
@@ -110,16 +110,22 @@ namespace ChatUI.Backend
         /// <param name="msg">The verification message (username)</param>
         private void receiveVerification(TcpClient client, byte[] msg)
         {
-            string user = Encoding.ASCII.GetString(msg);
+            string AlicesFriendID = Encoding.ASCII.GetString(msg);
 
-                                                                                            //Username is received here, begin KeySwapping
+            AliceSessionManager.CreateOTRSession(AlicesFriendID, true);
 
-            verifiedUsersNames.Add(user, client);
-            verifiedUsersClients.Add(client, user);
+            //Person with higher/lower IP is host.
+            if (AlicesFriendID.CompareTo(AlicesID) < 0)
+            {
+                AliceSessionManager.RequestOTRSession(AlicesFriendID, OTRSessionManager.GetSupportedOTRVersionList()[0]);
+            }
+
+            verifiedUsersNames.Add(AlicesFriendID, client);
+            verifiedUsersClients.Add(client, AlicesFriendID);
 
             cWindow.Dispatcher.Invoke(new Action(delegate()
             {
-                cWindow.OnlineUsers.Items.Add(user);
+                cWindow.OnlineUsers.Items.Add(AlicesFriendID);
             }));
 
             unverifiedUsers.Remove(client);
@@ -149,10 +155,13 @@ namespace ChatUI.Backend
         {
             String message = Encoding.ASCII.GetString(msg);
 
-            String username;
-            if(verifiedUsersClients.TryGetValue(client, out username)){
+
+            String AlicesFriendID;
+            if (verifiedUsersClients.TryGetValue(client, out AlicesFriendID))
+            {
+                AliceSessionManager.ProcessOTRMessage(AlicesFriendID, message);
                 ChatWindow chat = null;
-                if (cWindow.chats.TryGetValue(username, out chat))
+                if (cWindow.chats.TryGetValue(AlicesFriendID, out chat))
                 {
                     chat.Dispatcher.Invoke(new Action(delegate()
                     {
@@ -169,6 +178,7 @@ namespace ChatUI.Backend
         /// <param name="message">The message to be sent</param>
         public void sendChatMessage(String user, String message)
         {
+            AliceSessionManager.EncryptMessage(user, message);
             byte[] msg = Encoding.ASCII.GetBytes(message);
 
             TcpClient client = null;
@@ -185,81 +195,5 @@ namespace ChatUI.Backend
         {
             nModule.close();
         }
-
-        #region OTRAdditions
-
-        public void encryptFromGUI(String AlicesFriendID, String input)
-        {
-            otrManager.EncryptMessage(AlicesFriendID, input);
-        }
-
-        public void openOTRSession(String buddy_ID)
-        {
-            string _my_buddy_unique_id = buddy_ID; //Something like "Bob"
-
-
-            /* Create OTR session and Request OTR session */
-            //AliceSessionManager = new OTRSessionManager(_my_unique_id);
-
-            otrManager.OnOTREvent += new OTREventHandler(OnAliceOTRManagerEventHandler);
-
-            //AliceSessionManager.CreateOTRSession(_my_buddy_unique_id, true);
-            otrManager.CreateOTRSession(_my_buddy_unique_id);
-
-            otrManager.RequestOTRSession(_my_buddy_unique_id, OTRSessionManager.GetSupportedOTRVersionList()[0]);
-
-
-        }
-
-        //TODO: This manager needs to be updated to use the network traffic
-        private void OnAliceOTRManagerEventHandler(object source, OTREventArgs e)
-        {
-/*            switch (e.GetOTREvent())
-            {
-                case OTR_EVENT.MESSAGE:
-                    //This event happens when a message is decrypted successfully
-                    //Console.WriteLine("{0}: {1} \n", e.GetSessionID(), e.GetMessage());
-                    cout.Write("Client-" + e.GetSessionID() + ":\t" + e.GetMessage());
-                    cout.Flush();
-                    break;
-                case OTR_EVENT.SEND:
-                    //This is where you would send the data on the network. Next line is just a dummy line. e.GetMessage() will contain message to be sent
-                    message(0, e.GetMessage());
-                    break;
-                case OTR_EVENT.ERROR:
-                    //Some sort of error occurred. We should use these errors to decide if it is fatal (failure to verify key) or benign (message did not decrypt)
-                    cout.WriteLine("Alice: OTR Error: {0} \n", e.GetErrorMessage());
-                    cout.WriteLine("Alice: OTR Error Verbose: {0} \n", e.GetErrorVerbose());
-                    cout.Flush();
-                    break;
-                case OTR_EVENT.READY:
-                    //Fires when each user is ready for communication. Can't communicate prior to this.
-                    cout.WriteLine("TFC_SYSTEM_MESSAGE: Encrypted OTR session with {0} established \n", e.GetSessionID());
-                    //cout.Flush();
-                    otrManager.EncryptMessage(AlicesFriendID, "If you can read this, encryption is successful.");
-                    cout.Flush();
-                    break;
-                case OTR_EVENT.DEBUG:
-                    //Just for debug lines. Flagged using a true flag in the session manager construction
-                    //cout.WriteLine("DEBUG: " + e.GetMessage() + "\n");
-                    //cout.Flush();
-                    break;
-                case OTR_EVENT.EXTRA_KEY_REQUEST:
-                    //Allow for symmetric AES key usage. Only for OTR v3+.
-                    //I doubt we need this.
-                    break;
-                case OTR_EVENT.SMP_MESSAGE:
-                    //Fires after SMP process finishes
-                    cout.WriteLine("Authentication Notice: " + e.GetMessage() + "\n");
-                    cout.Flush();
-                    break;
-                case OTR_EVENT.CLOSED:
-                    //Fires when OTR session closes
-                    cout.WriteLine("TFC_SYSTEM_MESSAGE: Encrypted OTR session with {0} closed \n", e.GetSessionID());
-                    cout.Flush();
-                    break;
-            }*/
-        }
-        #endregion
     }
 }
