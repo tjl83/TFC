@@ -76,9 +76,6 @@ namespace ChatUI.Backend
         {
             sendMessage(user, msgType.Internal, InternalMsgType.BeginConvo);
             beginOTRSession(user);
-            while (!AliceSessionManager.IsSessionValid(user)) {
-                Thread.Sleep(1);
-            }
         }
 
         public void beginOTRSession(String AlicesFriendID)
@@ -254,13 +251,8 @@ namespace ChatUI.Backend
         /// </summary>
         public void close()
         {
-            TcpClient client = null;
-            byte[] SignOffMessage = Encoding.ASCII.GetBytes("0");
-
             foreach(String user in usersbyUsername.Keys){
-                if(usersbyUsername.TryGetValue(user, out client)){
-                    nModule.message(client, msgType.Internal, SignOffMessage);
-                }
+                sendMessage(user, msgType.Internal, InternalMsgType.SignOff);
             }
 
             Thread.Sleep(1000);

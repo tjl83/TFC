@@ -80,9 +80,8 @@ namespace ChatUI
         {
             foreach (ChatWindow chat in chats.Values)
             {
-                chat.Hide();
+                chat.Close();
             }
-            this.Hide();
             currentSession.close();
         }
     }

@@ -29,12 +29,14 @@ namespace ChatUI
     {
         private Session cSession;
         private String username;
+        private bool firstMsgRcv;
 
         public ChatWindow(Session currentSession, String user)
         {
             InitializeComponent();
             cSession = currentSession;
             username = user;
+            firstMsgRcv = false;
         }
 
         private void DisplayMessage(string message)
@@ -45,6 +47,12 @@ namespace ChatUI
 
         public void DisplayReceivedMessage(string message)
         {
+            if (!firstMsgRcv)
+            {
+                firstMsgRcv = true;
+                sendBtn.IsEnabled = true;
+                textBoxEntryField.IsEnabled = true;
+            }
             DisplayMessage(username + ": " + message);
         }
 

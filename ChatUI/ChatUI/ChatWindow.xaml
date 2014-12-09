@@ -14,10 +14,10 @@
         </Grid.ColumnDefinitions>
 
         <ScrollViewer Name="ScrollChat" Grid.Row="1" Grid.ColumnSpan="2">
-            <TextBox TextWrapping="Wrap" Height="Auto" HorizontalAlignment="Stretch" Name="textBoxChatPane" VerticalAlignment="Stretch" Width="Auto" Grid.Row="1" Grid.Column="0"/>
+            <TextBox IsReadOnly="True" TextWrapping="Wrap" Height="Auto" HorizontalAlignment="Stretch" Name="textBoxChatPane" VerticalAlignment="Stretch" Width="Auto" Grid.Row="1" Grid.Column="0"/>
         </ScrollViewer>
         
-        <TextBox Height="Auto" HorizontalAlignment="Stretch" Margin="6,6,6,6" Name="textBoxEntryField" VerticalAlignment="Stretch" Width="Auto" Grid.Row="2" Grid.Column="0" KeyDown="textBoxEntryField_KeyDown" />
-        <Button Height="Auto" HorizontalAlignment="Stretch" Margin="6,6,6,6" Name="sendBtn" VerticalAlignment="Stretch" Width="Auto" Grid.Row="2" Grid.Column="1" Content="Send" Click="sendBtn_Click" />
+        <TextBox IsEnabled="False" Height="Auto" HorizontalAlignment="Stretch" Margin="6,6,6,6" Name="textBoxEntryField" VerticalAlignment="Stretch" Width="Auto" Grid.Row="2" Grid.Column="0" KeyDown="textBoxEntryField_KeyDown" />
+        <Button IsEnabled="False" Height="Auto" HorizontalAlignment="Stretch" Margin="6,6,6,6" Name="sendBtn" VerticalAlignment="Stretch" Width="Auto" Grid.Row="2" Grid.Column="1" Content="Send" Click="sendBtn_Click" />
     </Grid>
 </Window>
