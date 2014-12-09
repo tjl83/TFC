@@ -37,6 +37,7 @@ namespace ChatUI
             cSession = currentSession;
             username = user;
             firstMsgRcv = false;
+            this.Title = "Chat with " + user;
         }
 
         private void DisplayMessage(string message)
